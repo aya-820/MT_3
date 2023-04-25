@@ -1,17 +1,9 @@
 #include <Novice.h>
 #define _USE_MATH_DEFINES
 #include<math.h>
-
-struct Vector3 final {
-	float x;
-	float y;
-	float z;
-};
-
-struct Vector2 final {
-	float x;
-	float y;
-};
+#include "Vector2.h"
+#include "Vector3.h"
+#include "Matrix4x4.h"
 
 const char kWindowTitle[] = "GC2D_12_トミタ_アヤナ";
 
