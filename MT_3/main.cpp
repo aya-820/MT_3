@@ -91,12 +91,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	const Vector3 v1 = Vector3(1.0f, 3.0f, -5.0f);
-	const Vector3 v2 = Vector3(4.0f, -1.0f, 2.0f);
-	const float k = { 4.0f };
-
-	const Vector2 textWH = { 100.0f,20.0f };
-
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -110,13 +104,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		Vector3 addResult = Add(v1, v2);
-		Vector3 subResult = Subtract(v1, v2);
-		Vector3 mulrResult = Multiply(k, v1);
-		float dotResult = Dot(v1, v2);
-		float lengthResult = Length(v1);
-		Vector3 normalizeResult = Normalize(v1);
-
 		///
 		/// ↑更新処理ここまで
 		///
@@ -124,15 +111,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-
-		Vector3Printf({ 0.0f,0.0f }, addResult, textWH, "Add");
-		Vector3Printf({ 0.0f,textWH.y }, subResult, textWH, "Subtract");
-		Vector3Printf({ 0.0f,textWH.y * 2 }, mulrResult, textWH, "Multply");
-		Novice::ScreenPrintf(0, (int)textWH.y * 3, "%.02f", dotResult);
-		Novice::ScreenPrintf((int)textWH.x, (int)textWH.y * 3, ":Dot");
-		Novice::ScreenPrintf(0, (int)textWH.y * 4, "%.02f", lengthResult);
-		Novice::ScreenPrintf((int)textWH.x, (int)textWH.y * 4, ":Length");
-		Vector3Printf({ 0.0f,textWH.y * 5 }, normalizeResult, textWH, "NOrmalize");
 
 		///
 		/// ↑描画処理ここまで
