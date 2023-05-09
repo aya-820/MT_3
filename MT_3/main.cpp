@@ -1,47 +1,242 @@
 #include <Novice.h>
 #define _USE_MATH_DEFINES
 #include<math.h>
-#include "Matrix4x4.h"
+#include <assert.h>
 #include "Vector2.h"
+#include "Vector3.h"
+#include "Matrix4x4.h"
 
 const char kWindowTitle[] = "GC2D_12_トミタ_アヤナ";
 
-//1.行列の加法
-Matrix4x4 Add()
+
+///
+///Matrix4x4関数
+/// 
+
+//加法
+Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2)
 {
+	Matrix4x4 result;
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			result.m[i][j] = m1.m[i][j] + m2.m[i][j];
+		}
+	}
+
+	return result;
+}
+//減法
+Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2)
+{
+	Matrix4x4 result;
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			result.m[i][j] = m1.m[i][j] - m2.m[i][j];
+		}
+	}
+
+	return result;
+}
+//行列の積
+Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2)
+{
+	Matrix4x4 result;
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			result.m[i][j] = m1.m[i][0] * m2.m[0][j] + m1.m[i][1] * m2.m[1][j] + m1.m[i][2] * m2.m[2][j] + m1.m[i][3] * m2.m[3][j];
+		}
+	}
+
+	return result;
+}
+//逆行列
+Matrix4x4 Inverse(const Matrix4x4& m1)
+{
+	Matrix4x4 result;
+	float deteminant = {
+		  m1.m[0][0] * m1.m[1][1] * m1.m[2][2] * m1.m[3][3]
+		+ m1.m[0][0] * m1.m[1][2] * m1.m[2][3] * m1.m[3][1]
+		+ m1.m[0][0] * m1.m[1][3] * m1.m[2][1] * m1.m[3][2]
+		- m1.m[0][0] * m1.m[1][3] * m1.m[2][2] * m1.m[3][1]
+		- m1.m[0][0] * m1.m[1][2] * m1.m[2][1] * m1.m[3][3]
+		- m1.m[0][0] * m1.m[1][1] * m1.m[2][3] * m1.m[3][2]
+		- m1.m[0][1] * m1.m[1][0] * m1.m[2][2] * m1.m[3][3]
+		- m1.m[0][2] * m1.m[1][0] * m1.m[2][3] * m1.m[3][1]
+		- m1.m[0][3] * m1.m[1][0] * m1.m[2][1] * m1.m[3][2]
+		+ m1.m[0][3] * m1.m[1][0] * m1.m[2][2] * m1.m[3][1]
+		+ m1.m[0][2] * m1.m[1][0] * m1.m[2][1] * m1.m[3][3]
+		+ m1.m[0][1] * m1.m[1][0] * m1.m[2][3] * m1.m[3][2]
+		+ m1.m[0][1] * m1.m[1][2] * m1.m[2][0] * m1.m[3][3]
+		+ m1.m[0][2] * m1.m[1][3] * m1.m[2][0] * m1.m[3][1]
+		+ m1.m[0][3] * m1.m[1][1] * m1.m[2][0] * m1.m[3][2]
+		- m1.m[0][3] * m1.m[1][2] * m1.m[2][0] * m1.m[3][1]
+		- m1.m[0][2] * m1.m[1][1] * m1.m[2][0] * m1.m[3][3]
+		- m1.m[0][1] * m1.m[1][3] * m1.m[2][0] * m1.m[3][2]
+		- m1.m[0][1] * m1.m[1][2] * m1.m[2][3] * m1.m[3][0]
+		- m1.m[0][2] * m1.m[1][3] * m1.m[2][1] * m1.m[3][0]
+		- m1.m[0][3] * m1.m[1][1] * m1.m[2][2] * m1.m[3][0]
+		+ m1.m[0][3] * m1.m[1][2] * m1.m[2][1] * m1.m[3][0]
+		+ m1.m[0][2] * m1.m[1][1] * m1.m[2][3] * m1.m[3][0]
+		+ m1.m[0][1] * m1.m[1][3] * m1.m[2][2] * m1.m[3][0] };
+	assert(deteminant != 0.0f);
+	float deteminantRecp = 1.0f / deteminant;
+
+	result.m[0][0] = { (
+		  m1.m[1][1] * m1.m[2][2] * m1.m[3][3]
+		+ m1.m[1][2] * m1.m[2][3] * m1.m[3][1]
+		+ m1.m[1][3] * m1.m[2][2] * m1.m[3][1]
+		- m1.m[1][3] * m1.m[2][2] * m1.m[3][1]
+		- m1.m[1][2] * m1.m[2][1] * m1.m[3][3]
+		- m1.m[1][1] * m1.m[2][3] * m1.m[3][2])
+		* deteminantRecp };
+	result.m[0][1] = { -(
+		  m1.m[0][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[0][2] = { (
+		  m1.m[0][] * m1.m[1][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[0][3] = { -(
+		  m1.m[0][] * m1.m[1][] * m1.m[2][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[2][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][])
+		* deteminantRecp };
+	result.m[1][0] = { -(
+		  m1.m[1][] * m1.m[2][] * m1.m[2][]
+		+ m1.m[1][] * m1.m[2][] * m1.m[2][]
+		+ m1.m[1][] * m1.m[2][] * m1.m[2][]
+		- m1.m[1][] * m1.m[2][] * m1.m[2][]
+		- m1.m[1][] * m1.m[2][] * m1.m[2][]
+		- m1.m[1][] * m1.m[2][] * m1.m[2][])
+		* deteminantRecp };
+	result.m[1][1] = { (
+		  m1.m[0][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[1][2] = { -(
+		  m1.m[0][] * m1.m[1][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[1][3] = { (
+		  m1.m[0][] * m1.m[1][] * m1.m[2][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[2][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][])
+		* deteminantRecp };
+	result.m[2][0] = { (
+		  m1.m[1][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[1][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[1][] * m1.m[2][] * m1.m[3][]
+		- m1.m[1][] * m1.m[2][] * m1.m[3][]
+		- m1.m[1][] * m1.m[2][] * m1.m[3][]
+		- m1.m[1][] * m1.m[2][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[2][1] = { -(
+		  m1.m[0][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[2][2] = { (
+		  m1.m[0][] * m1.m[1][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[2][3] = { -(
+		  m1.m[0][] * m1.m[1][] * m1.m[2][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[2][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][])
+		* deteminantRecp };
+	result.m[3][0] = { -(
+		  m1.m[1][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[1][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[1][] * m1.m[2][] * m1.m[3][]
+		- m1.m[1][] * m1.m[2][] * m1.m[3][]
+		- m1.m[1][] * m1.m[2][] * m1.m[3][]
+		- m1.m[1][] * m1.m[2][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[3][1] = { (
+		  m1.m[0][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[2][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][]
+		- m1.m[0][] * m1.m[2][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[3][2] = { -(
+		  m1.m[0][] * m1.m[1][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[3][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][]
+		- m1.m[0][] * m1.m[1][] * m1.m[3][])
+		* deteminantRecp };
+	result.m[3][3] = { (
+		  m1.m[0][] * m1.m[1][] * m1.m[2][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[2][]
+		+ m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][]
+		- m1.m[0][] * m1.m[1][] * m1.m[2][])
+		* deteminantRecp };
 
 }
-//2.行列の減法
-Matrix4x4 Subtract()
+//転置行列
+Matrix4x4 Transpose(const Matrix4x4& m1)
 {
+	Matrix4x4 result;
 
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			result.m[i][j] = m1.m[j][i];
+		}
+	}
+
+	return result;
 }
-//3.行列の積
-Matrix4x4 Multtply()
-{
-
-}
-//4.逆行列
-Matrix4x4 Inverse()
-{
-
-}
-//5.転置行列
-Matrix4x4 Transpote()
-{
-
-}
-//6.単位行列の作成
-Matrix4x4 MakeIdentity4x4()
-{
-
-}
-
-//Matrix4x4の数値表示
-void MatrixPrintf4x4(const Vector2& pos, const Matrix4x4& m)
-{
-
-}
+//単位行列の作成
+Matrix4x4 MakeIdentity4x4() {}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -52,7 +247,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
-
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -67,8 +261,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-
-
 		///
 		/// ↑更新処理ここまで
 		///
@@ -76,8 +268,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-
-
 
 		///
 		/// ↑描画処理ここまで
