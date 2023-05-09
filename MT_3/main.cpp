@@ -89,6 +89,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
+	Vector3 v1 = { 1.0f,3.0f,-5.0f }, v2 = { 4.0f,-1.0f,2.0f };
+	float k = 4.0f;
+
+	Vector2 textWH = { 100,20 };
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -102,6 +107,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
+		Vector3 resultAdd = Add(v1, v2);
+		Vector3 resultSubtract = Subtract(v1, v2);
+		Vector3 resultMultiply = Multiply(k, v2);
+		float resultDot = Dot(v1, v2);
+		float resultLength = Length(v1);
+		Vector3 resultNormalize = Normalize(v2);
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -109,6 +121,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
+
+		Vector3Printf({ 0,0 }, resultAdd, textWH, "Add");
+		Vector3Printf({ 0,textWH.y }, resultSubtract, textWH, "Subtract");
+		Vector3Printf({ 0,textWH.y * 2 }, resultMultiply, textWH, "Multiply");
+		Novice::ScreenPrintf(0, (int)textWH.y * 3, "%.02f : Dot", resultDot);
+		Novice::ScreenPrintf(0, (int)textWH.y * 4, "%.02f : Length", resultLength);
+		Vector3Printf({ 0,textWH.y * 5 }, resultNormalize, textWH, "Normalize");
 
 		///
 		/// ↑描画処理ここまで
