@@ -1,6 +1,6 @@
 #include <Novice.h>
 #define _USE_MATH_DEFINES
-#include<math.h>
+#include<cmath>
 #include <assert.h>
 #include "Vector2.h"
 #include "Vector3.h"
@@ -275,6 +275,32 @@ void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* labe
 	}
 }
 
+///
+///回転行列
+/// 
+
+//X軸
+Matrix4x4 MakeRotateXMatrix(float radian)
+{
+	Matrix4x4 result = {};
+
+	result.m[0][0] = 1.0f;
+	result.m[3][3] = 1.0f;
+
+	result.m[1][1] = std::cosf(radian);
+}
+//Y軸
+Matrix4x4 MakrRotateYMatrix(float radian)
+{
+
+}
+//Z軸
+Matrix4x4 MakeRotateZMatrix(float radian)
+{
+
+}
+
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -285,18 +311,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Matrix4x4 m1 = {
-		3.2f,0.7f,9.6f,4.4f,
-		5.5f,1.3f,7.8f,2.1f,
-		6.9f,8.0f,2.6f,1.0f,
-		0.5f,7.2f,5.1f,3.3f
-	};
-	Matrix4x4 m2 = {
-		4.1f,6.5f,3.3f,2.2f,
-		8.8f,0.6f,9.9f,7.7f,
-		1.1f,5.5f,6.6f,0.0f,
-		3.3f,9.9f,8.8f,2.2f
-	};
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -311,14 +326,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		Matrix4x4 resultAdd = Add(m1, m2);
-		Matrix4x4 resultMultiply = Multiply(m1, m2);
-		Matrix4x4 resultSubtract = Subtract(m1, m2);
-		Matrix4x4 inverseM1 = Inverse(m1);
-		Matrix4x4 inverseM2 = Inverse(m2);
-		Matrix4x4 transposeM1 = Transpose(m1);
-		Matrix4x4 transposeM2 = Transpose(m2);
-		Matrix4x4 identity = MakeIdentity4x4();
 
 		///
 		/// ↑更新処理ここまで
@@ -328,14 +335,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrinsf({ 0,0 }, resultAdd, "Add");
-		MatrixScreenPrinsf({ 0,textWH.y * 5 }, resultSubtract, "Subtract");
-		MatrixScreenPrinsf({ 0,textWH.y * 5 * 2 }, resultMultiply, "Multiply");
-		MatrixScreenPrinsf({ 0,textWH.y * 5 * 3 }, inverseM1, "InverseM1");
-		MatrixScreenPrinsf({ 0,textWH.y * 5 * 4 }, inverseM2, "InverseM2");
-		MatrixScreenPrinsf({ textWH.x * 5,0 }, transposeM1, "TransposeM1");
-		MatrixScreenPrinsf({ textWH.x * 5,textWH.y * 5 }, transposeM2, "TransposeM2");
-		MatrixScreenPrinsf({ textWH.x * 5,textWH.y * 5 * 2 }, identity, "Identity");
 
 		///
 		/// ↑描画処理ここまで
