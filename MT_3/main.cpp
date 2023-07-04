@@ -288,16 +288,46 @@ Matrix4x4 MakeRotateXMatrix(float radian)
 	result.m[3][3] = 1.0f;
 
 	result.m[1][1] = std::cosf(radian);
+	result.m[1][2] = std::sinf(radian);
+	result.m[2][1] = -std::sinf(radian);
+	result.m[2][2] = std::cosf(radian);
+
+	return result;
 }
 //Y軸
 Matrix4x4 MakrRotateYMatrix(float radian)
 {
+	Matrix4x4 result = {};
 
+	result.m[1][1] = 1.0f;
+	result.m[3][3] = 1.0f;
+
+	result.m[0][0] = std::cosf(radian);
+	result.m[0][2] = -std::sinf(radian);
+	result.m[2][0] = std::sinf(radian);
+	result.m[2][2] = std::cosf(radian);
+
+	return result;
 }
 //Z軸
 Matrix4x4 MakeRotateZMatrix(float radian)
 {
+	Matrix4x4 result = {};
 
+	result.m[2][2] = 1.0f;
+	result.m[3][3] = 1.0f;
+
+	result.m[0][0] = std::cosf(radian);
+	result.m[0][1] = std::sinf(radian);
+	result.m[1][0] = -std::sinf(radian);
+	result.m[1][1] = std::cosf(radian);
+
+	return result;
+}
+//XYZを融合
+Matrix4x4 MakeRotateXYZMatrix(Matrix4x4 rotateX, Matrix4x4 rotateY, Matrix4x4 rotateZ)
+{
+	return	Multiply(rotateX, Multiply(rotateY, rotateZ));
 }
 
 
@@ -311,7 +341,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
+	Vector3 rotate = { 0.4f,1.43f,-0.8f };
 
+	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateYMatrix = MakrRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+
+	Matrix4x4 rotateXYZMatrix = MakeRotateXYZMatrix(rotateXMatrix, rotateYMatrix, rotateZMatrix);
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -335,6 +371,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
+		MatrixScreenPrinsf({ 0,0 }, rotateXMatrix, "rotateXMatrix");
+		MatrixScreenPrinsf({ 0,textWH.y * 5 }, rotateYMatrix, "rotateYMatrix");
+		MatrixScreenPrinsf({ 0,textWH.y * 5 * 2 }, rotateZMatrix, "rotateZMatrix");
+		MatrixScreenPrinsf({ 0,textWH.y * 5 * 3 }, rotateXYZMatrix, "rotateXyzMatrix");
 
 		///
 		/// ↑描画処理ここまで
