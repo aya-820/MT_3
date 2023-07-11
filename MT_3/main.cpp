@@ -8,10 +8,124 @@
 
 const char kWindowTitle[] = "GC2D_12_トミタ_アヤナ";
 
+///
+///Vector3関数
+/// 
+//加法
+Vector3 Add(const Vector3& v1, const Vector3& v2)
+{
+	Vector3 result =
+	{
+		v1.x + v2.x,
+		v1.y + v2.y,
+		v1.z + v2.z
+	};
+
+	return result;
+}
+//減法
+Vector3 Subtract(const Vector3& v1, const Vector3& v2)
+{
+	Vector3 result =
+	{
+		v1.x - v2.x,
+		v1.y - v2.y,
+		v1.z - v2.z
+	};
+
+	return result;
+}
+//スカラー積
+Vector3 Multiply(float scalar, const Vector3& v)
+{
+	Vector3 result =
+	{
+		v.x * scalar,
+		v.y * scalar,
+		v.z * scalar
+	};
+
+	return result;
+}
+//内積
+float Dot(const Vector3& v1, const Vector3& v2)
+{
+	return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+}
+//長さ
+float Length(const Vector3& v)
+{
+	return sqrtf(powf(v.x, 2) + powf(v.y, 2) + powf(v.z, 2));
+}
+//正規化
+Vector3 Normalize(const Vector3& v)
+{
+	Vector3 result =
+	{
+		v.x / Length(v),
+		v.y / Length(v),
+		v.z / Length(v)
+	};
+
+	return result;
+}
+//画面出力
+void Vector3Printf(const Vector2& pos, const Vector3& v, const Vector2& textWH, const char* label)
+{
+	Novice::ScreenPrintf((int)pos.x, (int)pos.y, "x:%.02f,", v.x);
+	Novice::ScreenPrintf((int)pos.x + (int)textWH.x, (int)pos.y, "y:%.02f,", v.y);
+	Novice::ScreenPrintf((int)pos.x + ((int)textWH.x * 2), (int)pos.y, "z:%.02f", v.z);
+	Novice::ScreenPrintf((int)pos.x + ((int)textWH.x * 3), (int)pos.y, ":%s", label);
+}
+
 
 ///
 ///Matrix4x4関数
 /// 
+//平行移動行列
+Matrix4x4 MakeTranslateMatrix(const Vector3& translate)
+{
+	Matrix4x4 result = {};
+
+	for (int i = 0; i < 4; i++)
+	{
+		result.m[i][i] = 1;
+	}
+
+	result.m[3][0] = translate.x;
+	result.m[3][1] = translate.y;
+	result.m[3][2] = translate.z;
+
+	return result;
+}
+//拡大縮小行列
+Matrix4x4 MakeScaleMatrix(const Vector3& scale)
+{
+
+	Matrix4x4 result = {};
+
+	result.m[0][0] = scale.x;
+	result.m[1][1] = scale.y;
+	result.m[2][2] = scale.z;
+	result.m[3][3] = 1;
+
+	return result;
+}
+//座標変更行列
+Vector3 TransForm(const Vector3& vector, const Matrix4x4& matrix)
+{
+	Vector3 result;
+	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + 1.0f * matrix.m[3][0];
+	result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + 1.0f * matrix.m[3][1];
+	result.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] + 1.0f * matrix.m[3][2];
+	float w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] + 1.0f * matrix.m[3][3];
+	assert(w != 0.0f);
+	result.x /= w;
+	result.y /= w;
+	result.z /= w;
+
+	return result;
+}
 
 //加法
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2)
@@ -258,27 +372,9 @@ Matrix4x4 MakeIdentity4x4() {
 	return result;
 }
 
-//Matrix4x4の数値表示
-Vector2 textWH = { 60,20 };
-void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* label)
-{
-	Novice::ScreenPrintf((int)pos.x, (int)pos.y, "%s", label);
-	for (int i = 0; i < 4; ++i)
-	{
-		for (int j = 0; j < 4; ++j)
-		{
-			Novice::ScreenPrintf(
-				(int)(pos.x + j * textWH.x), (int)(pos.y + (i + 1) * textWH.y),
-				"%6.02f", m.m[i][j]
-			);
-		}
-	}
-}
-
 ///
-///回転行列
+///Matrix4x4回転行列
 /// 
-
 //X軸
 Matrix4x4 MakeRotateXMatrix(const float& radian)
 {
@@ -330,14 +426,37 @@ Matrix4x4 MakeRotateXYZMatrix(const Matrix4x4& rotateX, const Matrix4x4& rotateY
 	return	Multiply(rotateX, Multiply(rotateY, rotateZ));
 }
 
-
 ///
-///アフィン変換
+///Matrix4x4アフィン変換
 /// 
 Matrix4x4 MakeAfiineMatrix(const Vector3& scale, const Vector3& ratate, const Vector3& translate)
 {
+	Matrix4x4 scaleMatrix = {};
 
+	Matrix4x4 rotateMatrixX;
+	Matrix4x4 rotateMatrixY;
+	Matrix4x4 rotateMatrixZ;
+
+	Matrix4x4 translateMatrix = {};
 }
+
+//Matrix4x4の数値表示
+Vector2 textWH = { 60,20 };
+void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* label)
+{
+	Novice::ScreenPrintf((int)pos.x, (int)pos.y, "%s", label);
+	for (int i = 0; i < 4; ++i)
+	{
+		for (int j = 0; j < 4; ++j)
+		{
+			Novice::ScreenPrintf(
+				(int)(pos.x + j * textWH.x), (int)(pos.y + (i + 1) * textWH.y),
+				"%6.02f", m.m[i][j]
+			);
+		}
+	}
+}
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
