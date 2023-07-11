@@ -280,7 +280,7 @@ void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* labe
 /// 
 
 //X軸
-Matrix4x4 MakeRotateXMatrix(float radian)
+Matrix4x4 MakeRotateXMatrix(const float& radian)
 {
 	Matrix4x4 result = {};
 
@@ -295,7 +295,7 @@ Matrix4x4 MakeRotateXMatrix(float radian)
 	return result;
 }
 //Y軸
-Matrix4x4 MakrRotateYMatrix(float radian)
+Matrix4x4 MakrRotateYMatrix(const float& radian)
 {
 	Matrix4x4 result = {};
 
@@ -310,7 +310,7 @@ Matrix4x4 MakrRotateYMatrix(float radian)
 	return result;
 }
 //Z軸
-Matrix4x4 MakeRotateZMatrix(float radian)
+Matrix4x4 MakeRotateZMatrix(const float& radian)
 {
 	Matrix4x4 result = {};
 
@@ -325,11 +325,19 @@ Matrix4x4 MakeRotateZMatrix(float radian)
 	return result;
 }
 //XYZを融合
-Matrix4x4 MakeRotateXYZMatrix(Matrix4x4 rotateX, Matrix4x4 rotateY, Matrix4x4 rotateZ)
+Matrix4x4 MakeRotateXYZMatrix(const Matrix4x4& rotateX, const Matrix4x4& rotateY, const Matrix4x4& rotateZ)
 {
 	return	Multiply(rotateX, Multiply(rotateY, rotateZ));
 }
 
+
+///
+///アフィン変換
+/// 
+Matrix4x4 MakeAfiineMatrix(const Vector3& scale, const Vector3& ratate, const Vector3& translate)
+{
+
+}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -341,13 +349,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Vector3 rotate = { 0.4f,1.43f,-0.8f };
-
-	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
-	Matrix4x4 rotateYMatrix = MakrRotateYMatrix(rotate.y);
-	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
-
-	Matrix4x4 rotateXYZMatrix = MakeRotateXYZMatrix(rotateXMatrix, rotateYMatrix, rotateZMatrix);
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -371,10 +372,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrinsf({ 0,0 }, rotateXMatrix, "rotateXMatrix");
-		MatrixScreenPrinsf({ 0,textWH.y * 5 }, rotateYMatrix, "rotateYMatrix");
-		MatrixScreenPrinsf({ 0,textWH.y * 5 * 2 }, rotateZMatrix, "rotateZMatrix");
-		MatrixScreenPrinsf({ 0,textWH.y * 5 * 3 }, rotateXYZMatrix, "rotateXyzMatrix");
+
 
 		///
 		/// ↑描画処理ここまで
