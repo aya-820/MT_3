@@ -372,9 +372,7 @@ Matrix4x4 MakeIdentity4x4() {
 	return result;
 }
 
-///
-///Matrix4x4回転行列
-/// 
+//回転行列
 //X軸
 Matrix4x4 MakeRotateXMatrix(const float& radian)
 {
@@ -391,7 +389,7 @@ Matrix4x4 MakeRotateXMatrix(const float& radian)
 	return result;
 }
 //Y軸
-Matrix4x4 MakrRotateYMatrix(const float& radian)
+Matrix4x4 MakeRotateYMatrix(const float& radian)
 {
 	Matrix4x4 result = {};
 
@@ -426,18 +424,30 @@ Matrix4x4 MakeRotateXYZMatrix(const Matrix4x4& rotateX, const Matrix4x4& rotateY
 	return	Multiply(rotateX, Multiply(rotateY, rotateZ));
 }
 
-///
-///Matrix4x4アフィン変換
-/// 
-Matrix4x4 MakeAfiineMatrix(const Vector3& scale, const Vector3& ratate, const Vector3& translate)
+//アフィン変換
+Matrix4x4 MakeAfiineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate)
 {
 	Matrix4x4 scaleMatrix = {};
+	scaleMatrix.m[0][0] = scale.x;
+	scaleMatrix.m[1][1] = scale.y;
+	scaleMatrix.m[2][2] = scale.z;
+	scaleMatrix.m[3][3]=1.0f;
 
-	Matrix4x4 rotateMatrixX;
-	Matrix4x4 rotateMatrixY;
-	Matrix4x4 rotateMatrixZ;
+	Matrix4x4 rotateMatrixX = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateMatrixY = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateMatrixZ = MakeRotateZMatrix(rotate.z);
+	Matrix4x4 rotateMatrix = MakeRotateXYZMatrix(rotateMatrixX, rotateMatrixY, rotateMatrixZ);
 
 	Matrix4x4 translateMatrix = {};
+	for (int i = 0; i < 4; i++)
+	{
+		translateMatrix.m[i][i] = 1.0f;
+	}
+	translateMatrix.m[3][0] = translate.x;
+	translateMatrix.m[3][1] = translate.y;
+	translateMatrix.m[3][2] = translate.z;
+
+	return Multiply(scaleMatrix, Multiply(rotateMatrix, translateMatrix));
 }
 
 //Matrix4x4の数値表示
@@ -468,6 +478,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
+	Vector3 scale{ 1.2f,0.79f,-2.1f };
+	Vector3 rotate{ 0.4f,1.43f,-0.8f };
+	Vector3 translate{ 2.7f,-4.15f,1.57f };
+
+	Matrix4x4 worldMatrix = MakeAfiineMatrix(scale, rotate, translate);
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -491,7 +506,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-
+		MatrixScreenPrinsf({ 0,0 }, worldMatrix, "worldMatrix");
 
 		///
 		/// ↑描画処理ここまで
