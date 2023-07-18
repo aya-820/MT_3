@@ -1,6 +1,7 @@
 #include <Novice.h>
 #define _USE_MATH_DEFINES
 #include<cmath>
+#include<math.h>
 #include <assert.h>
 #include "Vector2.h"
 #include "Vector3.h"
@@ -450,6 +451,21 @@ Matrix4x4 MakeAfiineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	return Multiply(scaleMatrix, Multiply(rotateMatrix, translateMatrix));
 }
 
+//レンダリングパイプライン
+//透視投影行列
+Matrix4x4 MakePerspectiveFovMatrix(float fovY,float aspectRatio,float nearClip,float farClip)
+{
+	Matrix4x4 perspectiveMatrix = {};
+	perspectiveMatrix.m[0][0];
+
+}
+//正射影行列
+Matrix4x4 MakeOrthographicMatrix(float left,float top,float right,float bottom,float nearClip,float farClip)
+{}
+//ビューポート行列	
+Matrix4x4 MakeViewportMatrix(float left, float top, float width,float height,float minDepth,float maxDepth)
+{}
+
 //Matrix4x4の数値表示
 Vector2 textWH = { 60,20 };
 void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* label)
@@ -478,12 +494,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Vector3 scale{ 1.2f,0.79f,-2.1f };
-	Vector3 rotate{ 0.4f,1.43f,-0.8f };
-	Vector3 translate{ 2.7f,-4.15f,1.57f };
-
-	Matrix4x4 worldMatrix = MakeAfiineMatrix(scale, rotate, translate);
-
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -506,7 +516,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrinsf({ 0,0 }, worldMatrix, "worldMatrix");
 
 		///
 		/// ↑描画処理ここまで
