@@ -432,7 +432,7 @@ Matrix4x4 MakeAfiineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	scaleMatrix.m[0][0] = scale.x;
 	scaleMatrix.m[1][1] = scale.y;
 	scaleMatrix.m[2][2] = scale.z;
-	scaleMatrix.m[3][3]=1.0f;
+	scaleMatrix.m[3][3] = 1.0f;
 
 	Matrix4x4 rotateMatrixX = MakeRotateXMatrix(rotate.x);
 	Matrix4x4 rotateMatrixY = MakeRotateYMatrix(rotate.y);
@@ -452,19 +452,49 @@ Matrix4x4 MakeAfiineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 }
 
 //レンダリングパイプライン
-//透視投影行列
-Matrix4x4 MakePerspectiveFovMatrix(float fovY,float aspectRatio,float nearClip,float farClip)
+// //正射影行列
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
 {
-	Matrix4x4 perspectiveMatrix = {};
-	perspectiveMatrix.m[0][0];
+	Matrix4x4 orthogeraphicMatrix = {};
 
+	orthogeraphicMatrix.m[0][0] = 2 / (right - left);
+	orthogeraphicMatrix.m[1][1] = 2 / (top - bottom);
+	orthogeraphicMatrix.m[2][2] = 1 / (farClip - nearClip);
+	orthogeraphicMatrix.m[3][0] = (left + right) / (left - right);
+	orthogeraphicMatrix.m[3][1] = (top + bottom) / (bottom - top);
+	orthogeraphicMatrix.m[3][2] = nearClip / (nearClip - farClip);
+	orthogeraphicMatrix.m[3][3] = 1.0f;
+
+	return orthogeraphicMatrix;
 }
-//正射影行列
-Matrix4x4 MakeOrthographicMatrix(float left,float top,float right,float bottom,float nearClip,float farClip)
-{}
+//透視投影行列
+Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip)
+{
+	Matrix4x4 perspectiveFovMatrix = {};
+
+	perspectiveFovMatrix.m[0][0] = (1 / tanf(fovY / 2)) / aspectRatio;
+	perspectiveFovMatrix.m[1][1] = 1 / tanf(fovY / 2);
+	perspectiveFovMatrix.m[2][2] = farClip / (farClip - nearClip);
+	perspectiveFovMatrix.m[3][2] = (-farClip * nearClip) / (farClip - nearClip);
+	perspectiveFovMatrix.m[2][3] = 1.0f;
+
+	return perspectiveFovMatrix;
+}
 //ビューポート行列	
-Matrix4x4 MakeViewportMatrix(float left, float top, float width,float height,float minDepth,float maxDepth)
-{}
+Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth)
+{
+	Matrix4x4 viewportMatrix = {};
+
+	viewportMatrix.m[0][0] = width / 2;
+	viewportMatrix.m[1][1] = -height / 2;
+	viewportMatrix.m[2][2] = maxDepth - minDepth;
+	viewportMatrix.m[3][0] = left + (width / 2);
+	viewportMatrix.m[3][1] = top + (height / 2);
+	viewportMatrix.m[3][2] = minDepth;
+	viewportMatrix.m[3][3] = 1.0f;
+
+	return viewportMatrix;
+}
 
 //Matrix4x4の数値表示
 Vector2 textWH = { 60,20 };
@@ -494,6 +524,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
+	Matrix4x4 orthogeraphicMatrix = MakeOrthographicMatrix(-160.0f, 160.0f, 200.0f, 300.0f, 0.0f, 1000.0f);
+	Matrix4x4 perspectiveFovMatrix = MakePerspectiveFovMatrix(0.63f, 1.33f, 0.1f, 1000.0f);
+	Matrix4x4 viewportMatrix = MakeViewportMatrix(100.0f, 200.0f, 600.0f, 300.0f, 0.0f, 1.0f);
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -516,6 +550,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
+		MatrixScreenPrinsf({ 0,0 }, orthogeraphicMatrix, "orthogeraphicMatrix");
+		MatrixScreenPrinsf({ 0,textWH.y * 5 }, perspectiveFovMatrix, "perspectiveFovMatrix");
+		MatrixScreenPrinsf({ 0,textWH.y * 10 }, viewportMatrix, "viewportMatrix");
 
 		///
 		/// ↑描画処理ここまで
