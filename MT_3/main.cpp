@@ -452,7 +452,7 @@ Matrix4x4 MakeAfiineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 }
 
 //レンダリングパイプライン
-// //正射影行列
+//正射影行列
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
 {
 	Matrix4x4 orthogeraphicMatrix = {};
@@ -502,6 +502,66 @@ Vector3 Cross(const Vector3& a, const Vector3& b)
 	return { a.y * b.z - a.z * b.y,a.z * b.x - a.x * b.z,a.x * b.y - a.y * b.x };
 }
 
+//3D描画
+//グリッド(板of線)
+void DrowGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix)
+{
+	const float kGridHarfWidth = 2.0f;										//Grodの半分の幅
+	const uint32_t kSubdivision = 10;										//分割数
+	const float kGridEvery = (kGridHarfWidth * 2.0f) / float(kSubdivision);	//1つ分の長さ
+
+	//奥から手前への線を順々に引いていく
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex)
+	{
+		//上の情報を使ってワールド座標系上の始点と終点を求める
+		//スクリーン座標系まで変換をかける
+		//変換した座標を使って表示。色は薄い灰色(0xaaaaaaff)、原点は黒ぐらいがいい
+		//Novice::DrawLine()
+	}
+
+	//左から右も同じように順々に引いていく
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex)
+	{
+		//奥から手前が左右になるだけ
+		//上の情報を使ってワールド座標系上の始点と終点を求める
+		//スクリーン座標系まで変換をかける
+		//変換した座標を使って表示。色は薄い灰色(0xaaaaaaff)、原点は黒ぐらいがいい
+		//Novice::DrawLine()
+	}
+}
+//スフィア(球)
+struct Sphere
+{
+	Vector3 center;	//中心点
+	float radius; //半径
+};
+
+void DrowSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
+{
+	const uint32_t kSubdivision = 24;							//分割数
+	const float kLonEvery = (360.0f / kSubdivision) / 60.0f;	//経度分割1つ分の角度
+	const float kLatEvery = (360.0f / kSubdivision) / 60.0f;	//緯度分割1つ分の角度
+
+	//緯度の方向に分割　-π/2~π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; latIndex++)
+	{
+		float lat = -M_PI / 2.0f + kLatEvery * latIndex;	//現在の緯度
+
+		//経度の方向に分割　0~2π
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; lonIndex++)
+		{
+			float lon = lonIndex * kLonEvery;	//現在の経度
+
+			//world座標系でのa,b,cを求める
+			Vector3 a, b, c;
+			//a,b,cをscreen座標系まで変換
+			//ab,bcで線を引く
+			Novice::DrawLine(a.x, a.y, b.x, b.y, color);
+			Novice::DrawLine(b.x, b.y, c.x, c.y, color);
+		}
+	}
+}
+
 //Matrix4x4の数値表示
 Vector2 textWH = { 80,20 };
 void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* label)
@@ -519,6 +579,9 @@ void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* labe
 	}
 }
 
+//カメラの初期位置と角度
+Vector3 cameraTranslate = { 0.0f,1.9f,-6.49f };
+Vector3 cameraRotate = { 0.26f,0.0f,0.0f };
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -530,22 +593,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
-
-	Vector3 a = { 1.2f,-3.9f,2.5f };
-	Vector3 b = { 2.8f,0.4f,-1.3f };
-	Vector3 cross = Cross(a, b);
-
-	Vector3 kLocalVertices[3] = {
-	  {-0.5f, -0.5f, 0.0f},
-	  {0.0f,  0.5f,  0.0f},
-	  {0.5f,  -0.5f, 0.0f},
-	};
-
-	Vector3 rotate = {};
-	Vector3 translate = {};
-	const float speed = 0.05f;
-
-	Vector3 cameraPos = { 0.0f,0.0f,-5.0f };
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -560,58 +607,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		///三角形の移動
-		//三角形の上下移動
-		if (Novice::CheckHitKey(DIK_W))
-		{
-			translate.z += speed;
-		}
-		else if (Novice::CheckHitKey(DIK_S))
-		{
-			translate.z -= speed;
-		}
-		//三角形の左右移動
-		if (Novice::CheckHitKey(DIK_A))
-		{
-			translate.x -= speed;
-		}
-		else if (Novice::CheckHitKey(DIK_D))
-		{
-			translate.x += speed;
-		}
-
-		//三角形の回転
-		rotate.y += speed;
-		//ワールド変換行列を作る
-		Matrix4x4 worldMatrix = MakeAfiineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
-
-		//ビュー変換行列を作るためにカメラポジションで行列作成
-		Matrix4x4 cameraMatrix = MakeAfiineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPos);
-
-		//↑のカメラ行列を反転してビュー座標系変換行列を作る
-		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-
-		//透視投影行列を作る
-		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindow.x) / float(kWindow.y), 0.1f, 100.0f);
-
-		//ビュー変換行列と透視投影を掛けてワールド座標系→ビュー座標系→透視投影座標系への変換行列を作る
-		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-
-		//ビューポート行列を作る
-		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindow.x), float(kWindow.y), 0.0f, 1.0f);
-
-		//三角形ポリゴンの各頂点をスクリーン空間へ変換する
-		Vector3 screenVertices[3];
-		for (uint32_t i = 0; i < 3; i++)
-		{
-			//Transfarmを使うと同次座標系→デカルト座標系の処理が行われる
-			Vector3 ndcVertex = Transform(kLocalVertices[i], worldViewProjectionMatrix);
-
-			//ビューポート座標系への変換を行ってスクリーン空間へ
-			screenVertices[i] = Transform(ndcVertex, viewportMatrix);
-		}
-
-
 		///
 		/// ↑更新処理ここまで
 		///
@@ -619,20 +614,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-
-		Vector3Printf({ 0,0 }, cross, textWH, "Cross");
-
-		Novice::DrawTriangle(
-			int(screenVertices[0].x), int(screenVertices[0].y),
-			int(screenVertices[1].x), int(screenVertices[1].y),
-			int(screenVertices[2].x), int(screenVertices[2].y), RED, kFillModeSolid
-		);
-
-		for (int i = 0; i < 3; i++)
-		{
-			Vector3Printf({ 0,textWH.y * (i + 1) }, screenVertices[i], textWH, "screenVertices");
-
-		}
 
 		///
 		/// ↑描画処理ここまで
