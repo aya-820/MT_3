@@ -9,6 +9,8 @@
 
 const char kWindowTitle[] = "GC2D_12_トミタ_アヤナ";
 
+const Vector2 kWindow = { 1280,720 };
+
 ///
 ///Vector3関数
 /// 
@@ -83,6 +85,22 @@ void Vector3Printf(const Vector2& pos, const Vector3& v, const Vector2& textWH, 
 ///
 ///Matrix4x4関数
 /// 
+//Matrix4x4の数値表示
+Vector2 textWH = { 80,20 };
+void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* label)
+{
+	Novice::ScreenPrintf((int)pos.x, (int)pos.y, "%s", label);
+	for (int i = 0; i < 4; ++i)
+	{
+		for (int j = 0; j < 4; ++j)
+		{
+			Novice::ScreenPrintf(
+				(int)(pos.x + j * textWH.x), (int)(pos.y + (i + 1) * textWH.y),
+				"%6.02f", m.m[i][j]
+			);
+		}
+	}
+}
 //平行移動行列
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate)
 {
@@ -496,6 +514,67 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 	return viewportMatrix;
 }
 
+//スクリーン座標系へ変換
+Vector3 renderingPipeline(const Vector3& rotate, const  Vector3& translate, const Vector3& cameraTranslate, const Vector3& cameraRotate)
+{
+	//ワールド変換行列を作る
+	Matrix4x4 worldMatrix = MakeAfiineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
+
+	//ビュー変換行列を作るためにカメラポジションで行列作成
+	Matrix4x4 cameraMatrix = MakeAfiineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
+
+	//↑のカメラ行列を反転してビュー座標系変換行列を作る
+	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+
+	//透視投影行列を作る
+	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindow.x) / float(kWindow.y), 0.1f, 100.0f);
+
+	//ビュー変換行列と透視投影を掛けてワールド座標系→ビュー座標系→透視投影座標系への変換行列を作る
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+
+	//ビューポート行列を作る
+	Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindow.x), float(kWindow.y), 0.0f, 1.0f);
+
+	//スクリーン座標系へ変換
+	//Transfarmを使うと同次座標系→デカルト座標系の処理が行われる
+	Vector3 ndcVertex = Transform({ 0.0f,0.0f,0.0f }, worldViewProjectionMatrix);
+	//ビューポート座標系への変換を行ってスクリーン空間へ
+	Vector3 screenPos = Transform(ndcVertex, viewportMatrix);
+
+	return screenPos;
+}
+//ビュープロジェクション行列を生成
+Matrix4x4 MakeViewProjectionMatrix(const Vector3& rotate, const  Vector3& translate, const Vector3& cameraRotate, const Vector3& cameraTranslate)
+{
+	//ワールド変換行列を作る
+	Matrix4x4 worldMatrix = MakeAfiineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
+
+	//ビュー変換行列を作るためにカメラポジションで行列作成
+	Matrix4x4 cameraMatrix = MakeAfiineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
+
+	//↑のカメラ行列を反転してビュー座標系変換行列を作る
+	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+
+	//透視投影行列を作る
+	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindow.x) / float(kWindow.y), 0.1f, 100.0f);
+
+	//ビュー変換行列と透視投影を掛けてワールド座標系→ビュー座標系→透視投影座標系への変換行列を作る
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+
+	return worldViewProjectionMatrix;
+}
+//ビュープロジェクション行列とビューポート行列を使用し、スクリーン座標系へ変換
+Vector3 MakeScreenTransform(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, const Vector3& transform)
+{
+	//スクリーン座標系へ変換
+	//Transfarmを使うと同次座標系→デカルト座標系の処理が行われる
+	Vector3 ndcVertex = Transform(transform, viewProjectionMatrix);
+	//ビューポート座標系への変換を行ってスクリーン空間へ
+	Vector3 screenPos = Transform(ndcVertex, viewportMatrix);
+
+	return screenPos;
+}
+
 //クロス積
 Vector3 Cross(const Vector3& a, const Vector3& b)
 {
@@ -506,7 +585,7 @@ Vector3 Cross(const Vector3& a, const Vector3& b)
 //グリッド(板of線)
 void DrowGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix)
 {
-	const float kGridHarfWidth = 2.0f;										//Grodの半分の幅
+	const float kGridHarfWidth = 2.0f;										//Gridの半分の幅
 	const uint32_t kSubdivision = 10;										//分割数
 	const float kGridEvery = (kGridHarfWidth * 2.0f) / float(kSubdivision);	//1つ分の長さ
 
@@ -514,21 +593,67 @@ void DrowGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex)
 	{
 		//上の情報を使ってワールド座標系上の始点と終点を求める
+		Vector3 gridLineStart = { kGridHarfWidth * (xIndex - (kSubdivision / 2.0f)),0.0f,kGridEvery };
+		Vector3 gridLineEnd = { kGridHarfWidth * (xIndex - (kSubdivision / 2.0f)),0.0f,-kGridEvery };
+
 		//スクリーン座標系まで変換をかける
+		Vector3 gridLineStartScreen = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, gridLineStart);
+		Vector3 gridLineEndScreen = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, gridLineEnd);
+
 		//変換した座標を使って表示。色は薄い灰色(0xaaaaaaff)、原点は黒ぐらいがいい
-		//Novice::DrawLine()
+		if (xIndex - (kSubdivision / 2.0f) == 0)
+		{
+			Novice::DrawLine(
+				int(gridLineStartScreen.x), int(gridLineStartScreen.z),
+				int(gridLineEndScreen.x), int(gridLineEndScreen.z),
+				BLACK);
+
+			Vector3Printf({ 0.0f,0.0f }, gridLineStartScreen, textWH, "gridLineStartScreen");
+			Vector3Printf({ 0.0f,textWH.y }, gridLineEndScreen, textWH, "gridLineEndScreen");
+		}
+		else
+		{
+			Novice::DrawLine(
+				int(gridLineStartScreen.x), int(gridLineStartScreen.z),
+				int(gridLineEndScreen.x), int(gridLineEndScreen.z),
+				0xaaaaaaff);
+		}
+
 	}
 
 	//左から右も同じように順々に引いていく
-	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex)
+	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex)
 	{
 		//奥から手前が左右になるだけ
 		//上の情報を使ってワールド座標系上の始点と終点を求める
+		Vector3 gridLineStart = { kGridEvery ,0.0f, kGridHarfWidth * (zIndex - (kSubdivision / 2.0f)) };
+		Vector3 gridLineEnd = { -kGridEvery,0.0f, kGridHarfWidth * (zIndex - (kSubdivision / 2.0f)) };
+
 		//スクリーン座標系まで変換をかける
+		Vector3 gridLineStartScreen = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, gridLineStart);
+		Vector3 gridLineEndScreen = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, gridLineEnd);
+
 		//変換した座標を使って表示。色は薄い灰色(0xaaaaaaff)、原点は黒ぐらいがいい
-		//Novice::DrawLine()
+		if (zIndex - (kSubdivision / 2.0f) == 0)
+		{
+			Novice::DrawLine(
+				int(gridLineStartScreen.x), int(gridLineStartScreen.z),
+				int(gridLineEndScreen.x), int(gridLineEndScreen.z),
+				BLACK);
+
+			Vector3Printf({ 0.0f,textWH.y * 3 }, gridLineStartScreen, textWH, "gridLineStartScreen");
+			Vector3Printf({ 0.0f,textWH.y * 4 }, gridLineEndScreen, textWH, "gridLineEndScreen");
+		}
+		else
+		{
+			Novice::DrawLine(
+				int(gridLineStartScreen.x), int(gridLineStartScreen.z),
+				int(gridLineEndScreen.x), int(gridLineEndScreen.z),
+				0xaaaaaaff);
+		}
 	}
 }
+
 //スフィア(球)
 struct Sphere
 {
@@ -536,48 +661,31 @@ struct Sphere
 	float radius; //半径
 };
 
-void DrowSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
-{
-	const uint32_t kSubdivision = 24;							//分割数
-	const float kLonEvery = (360.0f / kSubdivision) / 60.0f;	//経度分割1つ分の角度
-	const float kLatEvery = (360.0f / kSubdivision) / 60.0f;	//緯度分割1つ分の角度
-
-	//緯度の方向に分割　-π/2~π/2
-	for (uint32_t latIndex = 0; latIndex < kSubdivision; latIndex++)
-	{
-		float lat = -M_PI / 2.0f + kLatEvery * latIndex;	//現在の緯度
-
-		//経度の方向に分割　0~2π
-		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; lonIndex++)
-		{
-			float lon = lonIndex * kLonEvery;	//現在の経度
-
-			//world座標系でのa,b,cを求める
-			Vector3 a, b, c;
-			//a,b,cをscreen座標系まで変換
-			//ab,bcで線を引く
-			Novice::DrawLine(a.x, a.y, b.x, b.y, color);
-			Novice::DrawLine(b.x, b.y, c.x, c.y, color);
-		}
-	}
-}
-
-//Matrix4x4の数値表示
-Vector2 textWH = { 80,20 };
-void MatrixScreenPrinsf(const Vector2& pos, const Matrix4x4& m, const char* label)
-{
-	Novice::ScreenPrintf((int)pos.x, (int)pos.y, "%s", label);
-	for (int i = 0; i < 4; ++i)
-	{
-		for (int j = 0; j < 4; ++j)
-		{
-			Novice::ScreenPrintf(
-				(int)(pos.x + j * textWH.x), (int)(pos.y + (i + 1) * textWH.y),
-				"%6.02f", m.m[i][j]
-			);
-		}
-	}
-}
+//void DrowSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
+//{
+//	const uint32_t kSubdivision = 24;							//分割数
+//	const float kLonEvery = (360.0f / kSubdivision) / 60.0f;	//経度分割1つ分の角度
+//	const float kLatEvery = (360.0f / kSubdivision) / 60.0f;	//緯度分割1つ分の角度
+//
+//	//緯度の方向に分割　-π/2~π/2
+//	for (uint32_t latIndex = 0; latIndex < kSubdivision; latIndex++)
+//	{
+//		float lat = -M_PI / 2.0f + kLatEvery * latIndex;	//現在の緯度
+//
+//		//経度の方向に分割　0~2π
+//		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; lonIndex++)
+//		{
+//			float lon = lonIndex * kLonEvery;	//現在の経度
+//
+//			//world座標系でのa,b,cを求める
+//			Vector3 a, b, c = {};
+//			//a,b,cをscreen座標系まで変換
+//			//ab,bcで線を引く
+//			Novice::DrawLine(a.x, a.y, b.x, b.y, color);
+//			Novice::DrawLine(b.x, b.y, c.x, c.y, color);
+//		}
+//	}
+//}
 
 //カメラの初期位置と角度
 Vector3 cameraTranslate = { 0.0f,1.9f,-6.49f };
@@ -587,7 +695,6 @@ Vector3 cameraRotate = { 0.26f,0.0f,0.0f };
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
-	const Vector2 kWindow = { 1280,720 };
 	Novice::Initialize(kWindowTitle, int(kWindow.x), int(kWindow.y));
 
 	// キー入力結果を受け取る箱
@@ -606,6 +713,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
+
+		//グリッド
+		Matrix4x4 viewProjectionMatrix = MakeViewProjectionMatrix({ 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
+		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindow.x), float(kWindow.y), 0.0f, 1.0f);
+		DrowGrid(viewProjectionMatrix, viewportMatrix);
 
 		///
 		/// ↑更新処理ここまで
