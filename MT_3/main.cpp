@@ -585,40 +585,40 @@ Vector3 Cross(const Vector3& a, const Vector3& b)
 //グリッド(板of線)
 void DrowGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix)
 {
-	const float kGridHarfWidth = 2.0f;										//Gridの半分の幅
+	const float kGridHalfWidth = 2.0f;										//Gridの半分の幅
 	const uint32_t kSubdivision = 10;										//分割数
-	const float kGridEvery = (kGridHarfWidth * 2.0f) / float(kSubdivision);	//1つ分の長さ
+	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);	//1つ分の長さ
 
 	//奥から手前への線を順々に引いていく
 	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex)
 	{
 		//上の情報を使ってワールド座標系上の始点と終点を求める
-		Vector3 gridLineStart = { kGridHarfWidth * (xIndex - (kSubdivision / 2.0f)),0.0f,kGridEvery };
-		Vector3 gridLineEnd = { kGridHarfWidth * (xIndex - (kSubdivision / 2.0f)),0.0f,-kGridEvery };
+		float x = -kGridHalfWidth + (xIndex * kGridEvery);
+		Vector3 gridLineStart = { x,0.0f,-kGridHalfWidth };
+		Vector3 gridLineEnd = { x,0.0f,kGridHalfWidth };
 
 		//スクリーン座標系まで変換をかける
 		Vector3 gridLineStartScreen = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, gridLineStart);
 		Vector3 gridLineEndScreen = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, gridLineEnd);
 
 		//変換した座標を使って表示。色は薄い灰色(0xaaaaaaff)、原点は黒ぐらいがいい
-		if (xIndex - (kSubdivision / 2.0f) == 0)
+		if (xIndex == kSubdivision / 2.0f)
 		{
 			Novice::DrawLine(
-				int(gridLineStartScreen.x), int(gridLineStartScreen.z),
-				int(gridLineEndScreen.x), int(gridLineEndScreen.z),
+				int(gridLineStartScreen.x), int(gridLineStartScreen.y),
+				int(gridLineEndScreen.x), int(gridLineEndScreen.y),
 				BLACK);
 
-			Vector3Printf({ 0.0f,0.0f }, gridLineStartScreen, textWH, "gridLineStartScreen");
-			Vector3Printf({ 0.0f,textWH.y }, gridLineEndScreen, textWH, "gridLineEndScreen");
+			Vector3Printf({ 0.0f,0.0f }, gridLineStartScreen, textWH, "gridLineStartScreen:z");
+			Vector3Printf({ 0.0f,textWH.y }, gridLineEndScreen, textWH, "gridLineEndScreen:z");
 		}
 		else
 		{
 			Novice::DrawLine(
-				int(gridLineStartScreen.x), int(gridLineStartScreen.z),
-				int(gridLineEndScreen.x), int(gridLineEndScreen.z),
+				int(gridLineStartScreen.x), int(gridLineStartScreen.y),
+				int(gridLineEndScreen.x), int(gridLineEndScreen.y),
 				0xaaaaaaff);
 		}
-
 	}
 
 	//左から右も同じように順々に引いていく
@@ -626,29 +626,30 @@ void DrowGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 	{
 		//奥から手前が左右になるだけ
 		//上の情報を使ってワールド座標系上の始点と終点を求める
-		Vector3 gridLineStart = { kGridEvery ,0.0f, kGridHarfWidth * (zIndex - (kSubdivision / 2.0f)) };
-		Vector3 gridLineEnd = { -kGridEvery,0.0f, kGridHarfWidth * (zIndex - (kSubdivision / 2.0f)) };
+		float z = -kGridHalfWidth + (zIndex * kGridEvery);
+		Vector3 gridLineStart = { -kGridHalfWidth ,0.0f,z };
+		Vector3 gridLineEnd = { kGridHalfWidth,0.0f,z };
 
 		//スクリーン座標系まで変換をかける
 		Vector3 gridLineStartScreen = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, gridLineStart);
 		Vector3 gridLineEndScreen = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, gridLineEnd);
 
 		//変換した座標を使って表示。色は薄い灰色(0xaaaaaaff)、原点は黒ぐらいがいい
-		if (zIndex - (kSubdivision / 2.0f) == 0)
+		if (zIndex == kSubdivision / 2.0f)
 		{
 			Novice::DrawLine(
-				int(gridLineStartScreen.x), int(gridLineStartScreen.z),
-				int(gridLineEndScreen.x), int(gridLineEndScreen.z),
+				int(gridLineStartScreen.x), int(gridLineStartScreen.y),
+				int(gridLineEndScreen.x), int(gridLineEndScreen.y),
 				BLACK);
 
-			Vector3Printf({ 0.0f,textWH.y * 3 }, gridLineStartScreen, textWH, "gridLineStartScreen");
-			Vector3Printf({ 0.0f,textWH.y * 4 }, gridLineEndScreen, textWH, "gridLineEndScreen");
+			Vector3Printf({ 0.0f,textWH.y * 3 }, gridLineStartScreen, textWH, "gridLineStartScreen:x");
+			Vector3Printf({ 0.0f,textWH.y * 4 }, gridLineEndScreen, textWH, "gridLineEndScreen:x");
 		}
 		else
 		{
 			Novice::DrawLine(
-				int(gridLineStartScreen.x), int(gridLineStartScreen.z),
-				int(gridLineEndScreen.x), int(gridLineEndScreen.z),
+				int(gridLineStartScreen.x), int(gridLineStartScreen.y),
+				int(gridLineEndScreen.x), int(gridLineEndScreen.y),
 				0xaaaaaaff);
 		}
 	}
@@ -715,7 +716,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 		//グリッド
-		Matrix4x4 viewProjectionMatrix = MakeViewProjectionMatrix({ 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
+		Matrix4x4 viewProjectionMatrix = MakeViewProjectionMatrix({ 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f }, cameraRotate, cameraTranslate);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindow.x), float(kWindow.y), 0.0f, 1.0f);
 		DrowGrid(viewProjectionMatrix, viewportMatrix);
 
