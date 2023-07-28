@@ -662,31 +662,53 @@ struct Sphere
 	float radius; //半径
 };
 
-//void DrowSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
-//{
-//	const uint32_t kSubdivision = 24;							//分割数
-//	const float kLonEvery = (360.0f / kSubdivision) / 60.0f;	//経度分割1つ分の角度
-//	const float kLatEvery = (360.0f / kSubdivision) / 60.0f;	//緯度分割1つ分の角度
-//
-//	//緯度の方向に分割　-π/2~π/2
-//	for (uint32_t latIndex = 0; latIndex < kSubdivision; latIndex++)
-//	{
-//		float lat = -M_PI / 2.0f + kLatEvery * latIndex;	//現在の緯度
-//
-//		//経度の方向に分割　0~2π
-//		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; lonIndex++)
-//		{
-//			float lon = lonIndex * kLonEvery;	//現在の経度
-//
-//			//world座標系でのa,b,cを求める
-//			Vector3 a, b, c = {};
-//			//a,b,cをscreen座標系まで変換
-//			//ab,bcで線を引く
-//			Novice::DrawLine(a.x, a.y, b.x, b.y, color);
-//			Novice::DrawLine(b.x, b.y, c.x, c.y, color);
-//		}
-//	}
-//}
+void DrowSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
+{
+	const uint32_t kSubdivision = 12;							//分割数
+	const float kLonEvery = float(M_PI) * 2.0f / int(kSubdivision);	//経度分割1つ分の角度
+	const float kLatEvery = float(M_PI) / int(kSubdivision);	//緯度分割1つ分の角度
+
+	//緯度の方向に分割　-π/2~π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; latIndex++)
+	{
+		float lat = -float(M_PI) / 2.0f + kLatEvery * latIndex;	//現在の緯度
+
+		//経度の方向に分割　0~2π
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; lonIndex++)
+		{
+			float lon = lonIndex * kLonEvery;	//現在の経度
+
+			//world座標系でのa,b,cを求める
+			Vector3 a =
+			{
+				(sphere.center.x + sphere.radius) * cosf(lat) * cosf(lon),
+				(sphere.center.y + sphere.radius) * sinf(lat),
+				(sphere.center.z + sphere.radius) * cosf(lat) * sinf(lon),
+			};
+			Vector3 b =
+			{
+			(sphere.center.x + sphere.radius) * cosf(lat + kLatEvery) * cosf(lon),
+			(sphere.center.y + sphere.radius) * sinf(lat * kLatEvery),
+			(sphere.center.z + sphere.radius) * cosf(lat * kLatEvery) * sinf(lon),
+			};
+			Vector3 c =
+			{
+			(sphere.center.x + sphere.radius) * cosf(lat) * cosf(lon * kLonEvery),
+			(sphere.center.y + sphere.radius) * sinf(lat),
+			(sphere.center.z + sphere.radius) * cosf(lat) * sinf(lon + kLonEvery),
+			};
+
+			//a,b,cをscreen座標系まで変換
+			Vector3 screenA = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, a);
+			Vector3 screenB = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, b);
+			Vector3 screenC = MakeScreenTransform(viewProjectionMatrix, viewportMatrix, c);
+
+			//ab,acで線を引く
+			Novice::DrawLine(int(screenA.x), int(screenA.y), int(screenB.x), int(screenB.y), color);
+			Novice::DrawLine(int(screenA.x), int(screenA.y), int(screenC.x), int(screenC.y), color);
+		}
+	}
+}
 
 //カメラの初期位置と角度
 Vector3 cameraTranslate = { 0.0f,1.9f,-6.49f };
@@ -702,6 +724,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
+	Sphere sphere = { {0.0f,0.0f,0.0f},1.0f };
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -715,10 +739,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
-		//グリッド
 		Matrix4x4 viewProjectionMatrix = MakeViewProjectionMatrix({ 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f }, cameraRotate, cameraTranslate);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindow.x), float(kWindow.y), 0.0f, 1.0f);
+
+		//グリッド
 		DrowGrid(viewProjectionMatrix, viewportMatrix);
+
+		//スフィア(球)
+		DrowSphere(sphere, viewProjectionMatrix, viewportMatrix, BLACK);
 
 		///
 		/// ↑更新処理ここまで
