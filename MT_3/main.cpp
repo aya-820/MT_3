@@ -675,21 +675,21 @@ void DrowSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 			//world座標系でのa,b,cを求める
 			Vector3 a =
 			{
-				(sphere.center.x + sphere.radius) * cosf(lat) * cosf(lon),
-				(sphere.center.y + sphere.radius) * sinf(lat),
-				(sphere.center.z + sphere.radius) * cosf(lat) * sinf(lon),
+				sphere.center.x + sphere.radius * cosf(lat) * cosf(lon),
+				sphere.center.y + sphere.radius * sinf(lat),
+				sphere.center.z + sphere.radius * cosf(lat) * sinf(lon),
 			};
 			Vector3 b =
 			{
-				(sphere.center.x + sphere.radius) * cosf(lat + kLatEvery) * cosf(lon),
-				(sphere.center.y + sphere.radius) * sinf(lat + kLatEvery),
-				(sphere.center.z + sphere.radius) * cosf(lat + kLatEvery) * sinf(lon),
+				sphere.center.x + sphere.radius * cosf(lat + kLatEvery) * cosf(lon),
+				sphere.center.y + sphere.radius * sinf(lat + kLatEvery),
+				sphere.center.z + sphere.radius * cosf(lat + kLatEvery) * sinf(lon),
 			};
 			Vector3 c =
 			{
-				(sphere.center.x + sphere.radius) * cosf(lat) * cosf(lon + kLonEvery),
-				(sphere.center.y + sphere.radius) * sinf(lat),
-				(sphere.center.z + sphere.radius) * cosf(lat) * sinf(lon + kLonEvery),
+				sphere.center.x + sphere.radius * cosf(lat) * cosf(lon + kLonEvery),
+				sphere.center.y + sphere.radius * sinf(lat),
+				sphere.center.z + sphere.radius * cosf(lat) * sinf(lon + kLonEvery),
 			};
 
 			//a,b,cをscreen座標系まで変換
@@ -747,7 +747,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("cameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("cameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("sphereCenter", &sphere.center.x, 0.01f);
-		ImGui::DragFloat3("sphereRadius", &sphere.radius, 0.01f);
+		ImGui::DragFloat("sphereRadius", &sphere.radius, 0.01f);
 		ImGui::End();
 
 		///
