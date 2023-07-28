@@ -3,6 +3,7 @@
 #include<cmath>
 #include<math.h>
 #include <assert.h>
+#include<imgui.h>
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
@@ -608,9 +609,6 @@ void DrowGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 				int(gridLineStartScreen.x), int(gridLineStartScreen.y),
 				int(gridLineEndScreen.x), int(gridLineEndScreen.y),
 				BLACK);
-
-			Vector3Printf({ 0.0f,0.0f }, gridLineStartScreen, textWH, "gridLineStartScreen:z");
-			Vector3Printf({ 0.0f,textWH.y }, gridLineEndScreen, textWH, "gridLineEndScreen:z");
 		}
 		else
 		{
@@ -641,9 +639,6 @@ void DrowGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 				int(gridLineStartScreen.x), int(gridLineStartScreen.y),
 				int(gridLineEndScreen.x), int(gridLineEndScreen.y),
 				BLACK);
-
-			Vector3Printf({ 0.0f,textWH.y * 3 }, gridLineStartScreen, textWH, "gridLineStartScreen:x");
-			Vector3Printf({ 0.0f,textWH.y * 4 }, gridLineEndScreen, textWH, "gridLineEndScreen:x");
 		}
 		else
 		{
@@ -661,7 +656,6 @@ struct Sphere
 	Vector3 center;	//中心点
 	float radius; //半径
 };
-
 void DrowSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
 {
 	const uint32_t kSubdivision = 12;							//分割数
@@ -747,6 +741,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//スフィア(球)
 		DrowSphere(sphere, viewProjectionMatrix, viewportMatrix, BLACK);
+
+		//imgui
+		ImGui::Begin("Window");
+		ImGui::DragFloat3("cameraTranslate", &cameraTranslate.x, 0.01f);
+		ImGui::DragFloat3("cameraRotate", &cameraRotate.x, 0.01f);
+		ImGui::DragFloat3("sphereCenter", &sphere.center.x, 0.01f);
+		ImGui::DragFloat3("sphereRadius", &sphere.radius, 0.01f);
+		ImGui::End();
 
 		///
 		/// ↑更新処理ここまで
