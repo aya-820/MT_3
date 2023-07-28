@@ -687,15 +687,15 @@ void DrowSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 			};
 			Vector3 b =
 			{
-			(sphere.center.x + sphere.radius) * cosf(lat + kLatEvery) * cosf(lon),
-			(sphere.center.y + sphere.radius) * sinf(lat * kLatEvery),
-			(sphere.center.z + sphere.radius) * cosf(lat * kLatEvery) * sinf(lon),
+				(sphere.center.x + sphere.radius) * cosf(lat + kLatEvery) * cosf(lon),
+				(sphere.center.y + sphere.radius) * sinf(lat + kLatEvery),
+				(sphere.center.z + sphere.radius) * cosf(lat + kLatEvery) * sinf(lon),
 			};
 			Vector3 c =
 			{
-			(sphere.center.x + sphere.radius) * cosf(lat) * cosf(lon * kLonEvery),
-			(sphere.center.y + sphere.radius) * sinf(lat),
-			(sphere.center.z + sphere.radius) * cosf(lat) * sinf(lon + kLonEvery),
+				(sphere.center.x + sphere.radius) * cosf(lat) * cosf(lon + kLonEvery),
+				(sphere.center.y + sphere.radius) * sinf(lat),
+				(sphere.center.z + sphere.radius) * cosf(lat) * sinf(lon + kLonEvery),
 			};
 
 			//a,b,cをscreen座標系まで変換
